@@ -215,9 +215,11 @@ NEMLStressBase::initQpStatefulProperties()
       mooseError("Error initializing NEML history: ", e.message());
     }
   }
-
   _energy[_qp] = 0.0;
   _dissipation[_qp] = 0.0;
+
+  if (_damage_index != nullptr)
+    (*_damage_index)[_qp] = 0.0;
 }
 
 void
