@@ -33,6 +33,7 @@
                        stress_xx stress_yy stress_zz stress_xy stress_yz stress_xz'
     add_variables = true
     block = 2
+    strain=FINITE
   []
 []
 
@@ -49,7 +50,13 @@
   [damage_average]
   order = CONSTANT
   family = MONOMIAL
-    []
+  block=2
+  []
+  [creep_strain_xx]
+    order = CONSTANT
+    family = MONOMIAL
+    block=2
+  []
 []
 
 [AuxKernels]
@@ -60,13 +67,22 @@
     execute_on = timestep_end
     block = 2 
   []
-  # [damage_avg]
-  # type = MaterialRealAux
-  # variable = damage_average
-  # property = damage_average
-  # execute_on = timestep_end
-  # block = 2
-  # []
+  [damage_avg]
+  type = MaterialRealAux
+  variable = damage_average
+  property = material_average
+  execute_on = timestep_end
+  block = 2
+  []
+  [creep_strain_xx]
+    type = RankTwoAux
+    variable = creep_strain_xx
+    rank_two_tensor = creep_strain
+    index_j = 0
+    index_i = 0
+    execute_on = timestep_end
+    block=2
+  []
 []
 
 [BCs]
@@ -111,45 +127,69 @@
 []
 
 [UserObjects]
-  [kill_element]
-    type = CoupledVarThresholdElementSubdomainModifier
-    coupled_var = 'damage_index'
-    block = 2
-    criterion_type = ABOVE
-    threshold = 100
-    subdomain_id = 1
-    execute_on = 'timestep_begin timestep_end INITIAL'
-    apply_initial_conditions=false
-  []
-  # [ele_avg]
-  #   type = RadiusAverage
-  #   variable = damage_index
-  #   radius = 0.3
-  #   execute_on = "NONLINEAR INITIAL TIMESTEP_End"
+  # [kill_element]
+  #   type = CoupledVarThresholdElementSubdomainModifier
+  #   coupled_var = 'damage_index'
   #   block = 2
+  #   criterion_type = ABOVE
+  #   threshold = 0.5
+  #   subdomain_id = 1
+  #   execute_on = 'INITIAL timestep_begin'
   # []
+  [ele_avg]
+    type = RadiusAverage
+    variable = damage_index
+    radius = 0.3
+    execute_on = "NONLINEAR INITIAL TIMESTEP_BEGIN"
+    block = 2
+    force_preic = true
+  []
 []
 
 [Materials]
-  [stress]
-    type = NEMLStress
-    model = test_powerdamage
-    database = 'damage.xml'
-    block = 2
-  []
   [dummy_material]
-      type = GenericConstantMaterial
+    type = GenericConstantMaterial
     prop_names = 'dummy'
     prop_values = '0.0'
-	block = 1
+	  block = 1
   []
 
-# [average_mat]
-#   type = AveragedMaterial
-#   ele_uo = "ele_avg"
-#   material_average_name = "damage_average"
-#   block = 2
-# []
+[average_mat]
+  type = AveragedMaterial
+  ele_uo = "ele_avg"
+  material_average_name = "material_average"
+  block = 2
+[]
+[damage]
+    type = SteelCreepDamageOhAvg
+    epsilon_f = 0.01
+    creep_strain_name = creep_strain
+    reduction_factor = 1.0e3
+    use_old_damage = true
+    creep_law_exponent = 10.0
+    block = 2
+  []
+
+  [radial_return_stress]
+    type = ComputeMultipleInelasticStress
+    inelastic_models = 'powerlawcrp'
+    damage_model = damage
+    block = 2
+  []
+  [powerlawcrp]
+    type = PowerLawCreepStressUpdate
+    coefficient = 3.125e-21
+    n_exponent = 4.0
+    m_exponent = 0.0
+    activation_energy = 0.0
+    block=2
+  []
+  [elasticity]
+    type = ComputeIsotropicElasticityTensor
+    poissons_ratio = 0.2
+    youngs_modulus = 10e9
+    block=2
+  []
 []
 
 [Preconditioning]
@@ -181,7 +221,6 @@
   petsc_options_iname = '-pc_type'
   petsc_options_value = 'lu'
   automatic_scaling = true
-  line_search = none
 
   end_time = 900.0
   dt = 100.0
