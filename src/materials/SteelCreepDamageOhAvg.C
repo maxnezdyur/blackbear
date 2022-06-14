@@ -20,7 +20,6 @@
 #include "MooseUtils.h"
 #include <cmath>
 #include "RankTwoScalarTools.h"
-
 #include "libmesh/utility.h"
 
 registerMooseObject("BlackBearApp", SteelCreepDamageOhAvg);
@@ -36,6 +35,7 @@ SteelCreepDamageOhAvgTempl<is_ad>::validParams()
       "capacity. This can model, e.g., 316H creep failure. See Oh et al (2011).");
   params.addRequiredParam<Real>("epsilon_f", "Uniaxial creep fracture strain (creep ductility).");
   params.addRequiredParam<Real>("creep_law_exponent", "Exponent of the creep power law.");
+  params.addRequiredParam<UserObjectName>("average", "Radial Average user object");
   params.addParam<Real>(
       "reduction_factor", 1000.0, "Reduction on the load-carrying capacity (stress).");
   params.addRangeCheckedParam<Real>(
@@ -66,7 +66,11 @@ SteelCreepDamageOhAvgTempl<is_ad>::SteelCreepDamageOhAvgTempl(const InputParamet
     _stress(this->template getGenericMaterialProperty<RankTwoTensor, is_ad>(_base_name + "stress")),
     _omega(this->template declareGenericProperty<Real, is_ad>(_base_name + "omega")),
     _omega_old(this->template getMaterialPropertyOld<Real>(_base_name + "omega")),
-    _avg_omega(this->template getMaterialPropertyByName<Real>(_base_name + "material_average"))
+    _damage_index_local(
+        this->template declareGenericProperty<Real, is_ad>(_base_name + "damage_index_local")),
+    _damage_index_local_old(
+        this->template getMaterialPropertyOld<Real>(_base_name + "damage_index_local")),
+    _average(this->template getUserObject<RadialAverage>("average").getAverage())
 {
   if (MooseUtils::absoluteFuzzyEqual(_creep_law_exponent, -0.5, TOLERANCE))
     this->template paramError(
@@ -87,6 +91,12 @@ template <bool is_ad>
 void
 SteelCreepDamageOhAvgTempl<is_ad>::updateQpDamageIndex()
 {
+
+  // if (_qp == 0)
+  //   _average_damage = _average.find(_current_elem->id());
+  // if (_average_damage->second[_qp] < _damage_index_old[_qp])
+  //   _average_damage->second[_qp] = _damage_index_old[_qp];
+
   Real epsilon_f_star;
 
   const auto & stress = MetaPhysicL::raw_value(_stress[_qp]);
@@ -113,7 +123,8 @@ SteelCreepDamageOhAvgTempl<is_ad>::updateQpDamageIndex()
   // This would also cause an FPE a few lines below
   if (std::abs(epsilon_f_star) < TOLERANCE)
   {
-    _damage_index[_qp] = _damage_index_old[_qp];
+    _damage_index_local[_qp] = _damage_index_local_old[_qp];
+    _damage_index[_qp] = getDamageIndex();
     _omega[_qp] = _omega_old[_qp];
     return;
   }
@@ -142,14 +153,15 @@ SteelCreepDamageOhAvgTempl<is_ad>::updateQpDamageIndex()
 
   // use_old_damage should be set to true for this object to yield good convergence properties.
   if (_use_old_damage)
-    threshold = MetaPhysicL::raw_value(_avg_omega[_qp]);
+    threshold = MetaPhysicL::raw_value(_omega_old[_qp]);
   else
-    threshold = MetaPhysicL::raw_value(_avg_omega[_qp]);
+    threshold = MetaPhysicL::raw_value(_omega[_qp]);
 
   if (threshold < _reduction_damage_threshold)
   {
     // If threshold is not reached, there is no damage.
-    _damage_index[_qp] = 0.0;
+    _damage_index_local[_qp] = 0.0;
+    _damage_index[_qp] = getDamageIndex();
     return;
   }
 
@@ -159,11 +171,28 @@ SteelCreepDamageOhAvgTempl<is_ad>::updateQpDamageIndex()
   // Cast damage index from the omega model to the traditional damage index.
   Real factor = (threshold - _reduction_damage_threshold) / (1 - _reduction_damage_threshold) *
                 _reduction_factor;
-  _damage_index[_qp] = 1.0 - 1.0 / factor;
+  _damage_index_local[_qp] = 1.0 - 1.0 / factor;
 
   // Account for a corner case where threshold == _reduction_damage_threshold
-  if (_damage_index[_qp] < 0.0)
-    _damage_index[_qp] = 0.0;
+  if (_damage_index_local[_qp] < 0.0)
+    _damage_index_local[_qp] = 0.0;
+  // add in average
+  _damage_index[_qp] = getDamageIndex();
+}
+
+template <bool is_ad>
+Real
+SteelCreepDamageOhAvgTempl<is_ad>::getDamageIndex()
+{
+  if (_qp == 0)
+    _average_damage = _average.find(_current_elem->id());
+  if (_average_damage != _average.end())
+    if (_average_damage->second[_qp] < _damage_index_old[_qp])
+      return _damage_index_old[_qp];
+    else
+      return _average_damage->second[_qp];
+  else
+    return 0.0;
 }
 
 template class SteelCreepDamageOhAvgTempl<false>;

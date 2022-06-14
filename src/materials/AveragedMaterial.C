@@ -47,8 +47,9 @@ AveragedMaterial::AveragedMaterial(const InputParameters & parameters)
 void
 AveragedMaterial::computeProperties()
 {
+  auto ele_data = _ele_uo.getAverage(_current_elem->id());
   for (unsigned int _qp = 0; _qp < _qrule->n_points(); ++_qp)
   {
-    _mat_avg[_qp] = _ele_uo.getAverage(_current_elem->id(), _qp);
+    _mat_avg[_qp] = ele_data[_qp];
   }
 }

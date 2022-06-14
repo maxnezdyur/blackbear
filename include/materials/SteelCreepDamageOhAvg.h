@@ -16,6 +16,8 @@
 
 #include "ScalarDamageBase.h"
 #include "GuaranteeConsumer.h"
+// #include "RadiusAverage.h"
+#include "RadialAverage.h"
 
 /**
  * Scalar damage model that defines the damage parameter using a material property
@@ -66,10 +68,14 @@ protected:
   GenericMaterialProperty<Real, is_ad> & _omega;
   const MaterialProperty<Real> & _omega_old;
   ///@}
+  // Local Damage
+  GenericMaterialProperty<Real, is_ad> & _damage_index_local;
+  const MaterialProperty<Real> & _damage_index_local_old;
+
   // Averaged Material
   // std::string _avg_material_name;
-  const MaterialProperty<Real> & _avg_omega;
-  // const MaterialProperty<Real> & _avg_omega_old;
+  const RadialAverage::Result & _average;
+  RadialAverage::Result::const_iterator _average_damage;
 
   ///@{ Make hierarchy parameters available in this class
   using ScalarDamageBaseTempl<is_ad>::_damage_index;
@@ -81,7 +87,11 @@ protected:
   using ScalarDamageBaseTempl<is_ad>::_dt;
   using ScalarDamageBaseTempl<is_ad>::_base_name;
   using ScalarDamageBaseTempl<is_ad>::_maximum_damage_increment;
+  using ScalarDamageBaseTempl<is_ad>::_current_elem;
+  using ScalarDamageBaseTempl<is_ad>::_JxW;
+  using ScalarDamageBaseTempl<is_ad>::_coord;
   ///@}
+  Real getDamageIndex();
 };
 
 typedef SteelCreepDamageOhAvgTempl<false> SteelCreepDamageOhAvg;
