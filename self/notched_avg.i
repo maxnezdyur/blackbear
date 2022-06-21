@@ -57,7 +57,7 @@
     # generate_output = 'strain_xx strain_yy strain_zz strain_xy strain_yz strain_xz
                       #  stress_xx stress_yy stress_zz stress_xy stress_yz stress_xz'
     add_variables = true
-    incremental = false
+    incremental = true
     block = 2
     use_automatic_differentiation = true
     strain=FINITE
@@ -248,7 +248,7 @@
   # automatic_scaling = true
   line_search = 'bt'
   end_time = 70.0
-  dt = 1.0
+  dt = 0.1
 []
 [Outputs]
   # exodus = true
