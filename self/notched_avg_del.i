@@ -9,18 +9,17 @@
 []
 
 [Variables]
-  [disp_x]
-  []
-  [disp_y]
-  []
+ 
 []
 
 [Mesh]
-  [gen]
+ [gen]
     type = GeneratedMeshGenerator
     dim = 2
-    nx = 11
+    nx = 21
     ny = 11
+    xmin = 0
+    xmax = 2
     # subdomain_ids = 2
     elem_type = quad4
   []
@@ -28,17 +27,17 @@
     type = ElementSubdomainIDGenerator
     input = corner_node
     subdomain_ids = '
-    2 2 2 2 2 1 2 2 2 2 2
-    2 2 2 2 2 1 2 2 2 2 2  
-    2 2 2 2 2 2 2 2 2 2 2
-    2 2 2 2 2 2 2 2 2 2 2   
-    2 2 2 2 2 2 2 2 2 2 2
-    2 2 2 2 2 2 2 2 2 2 2
-    2 2 2 2 2 2 2 2 2 2 2
-    2 2 2 2 2 2 2 2 2 2 2
-    2 2 2 2 2 2 2 2 2 2 2
-    2 2 2 2 2 1 2 2 2 2 2 
-    2 2 2 2 2 1 2 2 2 2 2'
+    2 2 2 2 2 2 2 2 2 2 1 2 2 2 2 2 2 2 2 2 2 
+    2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2   
+    2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 
+    2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2    
+    2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 
+    2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 
+    2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 
+    2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 
+    2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 
+    2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2  
+    2 2 2 2 2 2 2 2 2 2 1 2 2 2 2 2 2 2 2 2 2 '
   []
   [./corner_node]
     type = ExtraNodesetGenerator
@@ -46,6 +45,21 @@
     nodes = 0
     input = gen
   [../]
+  [./delete]
+  type = BlockDeletionGenerator
+  input = subdomain_id
+  block = '1'
+  [../]
+  [add_element]
+    type = GeneratedMeshGenerator
+    dim = 2
+    subdomain_ids = 1
+    elem_type = 'quad4' 
+  []
+[combine_mesh]
+   type = MeshCollectionGenerator
+    inputs = 'delete add_element'
+[]
 []
 
 [Modules/TensorMechanics/Master]
@@ -66,10 +80,6 @@
     family = MONOMIAL
     block = 2
   []
-  [./min]
-    order = CONSTANT
-    family = MONOMIAL
-  [../]
   [damage_average]
   order = CONSTANT
   family = MONOMIAL
@@ -107,25 +117,12 @@
 []
 
 [BCs]
-  # [fx]
-  #   type = DirichletBC
-  #   variable = disp_x
-  #   boundary =bottom
-  #   value = 0.0
-  # []
    [fx2]
     type = ADDirichletBC
     variable = disp_y
     boundary =top_right
     value = 0.0
   []
-  # [fx2]
-  #   type = DirichletBC
-  #   variable = disp_x
-  #   boundary = top
-  #   value = 0.0
-  # []
-
   [fy]
     type = ADFunctionDirichletBC
     variable = disp_x
@@ -156,12 +153,12 @@
 
 
 [Materials]
-  [dummy_material]
-    type = GenericConstantMaterial 
-    prop_names = 'dummy'
-    prop_values = '0.0'
-	  block = 1
-  []
+   [dummy_material]
+     type = ADGenericConstantMaterial 
+     prop_names = 'dummy'
+     prop_values = '0.0'
+	   block = 1
+   []
  [converter_to_ad]
     type = MaterialADConverter
     ad_props_in = damage_index_local
@@ -204,21 +201,23 @@
   []
 []
 [UserObjects]
-  # [kill_element]
-  #   type = CoupledVarThresholdElementSubdomainModifier
-  #   coupled_var = 'damage_index'
-  #   block = 2
-  #   criterion_type = ABOVE
-  #   threshold = 0.5
-  #   subdomain_id = 1
-  #   execute_on = 'INITIAL timestep_begin'
-  # []
+ #[kill_element]
+ #  type = CoupledVarThresholdElementSubdomainModifier
+ #  coupled_var = 'damage_average'
+ #  block = 2
+ #  criterion_type = ABOVE
+ #  threshold = 0.9
+ #  subdomain_id = 1
+ #  execute_on = 'TIMESTEP_END'
+ #  force_preaux = false
+ #[]
   [ele_avg]
     type = RadialAverage
     material_name = damage_index_local_out
-    execute_on = "initial timestep_begin"
+    execute_on = "TIMESTEP_END"
     block = 2
-    r_cut = 0.05
+    r_cut = 0.1
+    #force_postaux = true
     # force_preic =
     # force_preaux = true
   []
@@ -243,18 +242,18 @@
   type = Transient
   solve_type = 'NEWTON'
 
-  l_max_its = 5
+  l_max_its = 20
   l_tol = 1e-14
-  nl_max_its = 10
-  nl_rel_tol = 1e-6
+  nl_max_its = 30
+  nl_rel_tol = 1e-7
   nl_abs_tol = 1e-8
 
   petsc_options = '-snes_ksp_ew'
   petsc_options_iname = '-pc_type -pc_factor_mat_solver_package'
   petsc_options_value = 'lu    superlu_dist'
-  automatic_scaling = true
-  # line_search = 'bt'
-  end_time = 100.0
+  # automatic_scaling = true
+  line_search = 'bt'
+  end_time = 70.0
   dt = 1.0
 []
 [Outputs]

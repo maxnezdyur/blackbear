@@ -1,50 +1,54 @@
 [GlobalParams]
   displacements = 'disp_x disp_y'
-  volumetric_locking_correction = true
-  order = FIRST
-  family = LAGRANGE
+  #volumetric_locking_correction = true
+  #order = FIRST
+  #family = LAGRANGE
 []
 [Problem]
   kernel_coverage_check = false
 []
 
 [Variables]
-  [disp_x]
-  []
-  [disp_y]
-  []
+ 
 []
 
 [Mesh]
-  [gen]
+ [gen]
     type = GeneratedMeshGenerator
     dim = 2
-    nx = 11
+    nx = 21
     ny = 11
+    xmin = 0
+    xmax = 2
     # subdomain_ids = 2
-    elem_type = quad4
+    elem_type = quad8
   []
  [subdomain_id]
     type = ElementSubdomainIDGenerator
     input = corner_node
     subdomain_ids = '
-    2 2 2 2 2 1 2 2 2 2 2
-    2 2 2 2 2 1 2 2 2 2 2  
-    2 2 2 2 2 2 2 2 2 2 2
-    2 2 2 2 2 2 2 2 2 2 2   
-    2 2 2 2 2 2 2 2 2 2 2
-    2 2 2 2 2 2 2 2 2 2 2
-    2 2 2 2 2 2 2 2 2 2 2
-    2 2 2 2 2 2 2 2 2 2 2
-    2 2 2 2 2 2 2 2 2 2 2
-    2 2 2 2 2 1 2 2 2 2 2 
-    2 2 2 2 2 1 2 2 2 2 2'
+    2 2 2 2 2 2 2 2 2 2 1 2 2 2 2 2 2 2 2 2 2 
+    2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2   
+    2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 
+    2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2    
+    2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 
+    2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 
+    2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 
+    2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 
+    2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 
+    2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2  
+    2 2 2 2 2 2 2 2 2 2 1 2 2 2 2 2 2 2 2 2 2 '
   []
   [./corner_node]
     type = ExtraNodesetGenerator
     new_boundary = top_right
     nodes = 0
     input = gen
+  [../]
+    [./delete]
+    type = BlockDeletionGenerator
+    input = subdomain_id
+    block = '1'
   [../]
 []
 
@@ -53,7 +57,7 @@
     # generate_output = 'strain_xx strain_yy strain_zz strain_xy strain_yz strain_xz
                       #  stress_xx stress_yy stress_zz stress_xy stress_yz stress_xz'
     add_variables = true
-    incremental = true
+    incremental = false
     block = 2
     use_automatic_differentiation = true
     strain=FINITE
@@ -107,25 +111,12 @@
 []
 
 [BCs]
-  # [fx]
-  #   type = DirichletBC
-  #   variable = disp_x
-  #   boundary =bottom
-  #   value = 0.0
-  # []
    [fx2]
     type = ADDirichletBC
     variable = disp_y
     boundary =top_right
     value = 0.0
   []
-  # [fx2]
-  #   type = DirichletBC
-  #   variable = disp_x
-  #   boundary = top
-  #   value = 0.0
-  # []
-
   [fy]
     type = ADFunctionDirichletBC
     variable = disp_x
@@ -156,12 +147,12 @@
 
 
 [Materials]
-  [dummy_material]
-    type = GenericConstantMaterial 
-    prop_names = 'dummy'
-    prop_values = '0.0'
-	  block = 1
-  []
+  # [dummy_material]
+  #   type = ADGenericConstantMaterial 
+  #   prop_names = 'dummy'
+  #   prop_values = '0.0'
+	#   block = 1
+  # []
  [converter_to_ad]
     type = MaterialADConverter
     ad_props_in = damage_index_local
@@ -173,13 +164,13 @@
     epsilon_f = 0.01
     creep_strain_name = creep_strain
     reduction_factor = 1.0e3
-    use_old_damage = false
+    use_old_damage = true
     creep_law_exponent = 10.0
     reduction_damage_threshold =  0.9
     average= "ele_avg"
     block = 2
     damage_index_name = damage_index
-    maximum_damage_increment = 0.9999
+    #maximum_damage_increment = 0.9999
   []
 
   [radial_return_stress]
@@ -216,9 +207,9 @@
   [ele_avg]
     type = RadialAverage
     material_name = damage_index_local_out
-    execute_on = "initial timestep_begin"
+    execute_on = "timestep_end"
     block = 2
-    r_cut = 0.05
+    r_cut = 0.1
     # force_preic =
     # force_preaux = true
   []
@@ -231,30 +222,32 @@
   
 []
 
-# [Postprocessors]
-#   [damage_index]
-#     type = ElementAverageValue
-#     variable = damage_index
-#     block = 2
-#   []
-# []
+[Postprocessors]
+  [reaction_force_x]
+  type = ADSidesetReaction
+  direction = '1 0 0'
+  stress_tensor = "stress"
+  boundary = right
+  block = 2
+  []
+[]
 
 [Executioner]
   type = Transient
   solve_type = 'NEWTON'
 
-  l_max_its = 5
+  l_max_its = 20
   l_tol = 1e-14
-  nl_max_its = 10
-  nl_rel_tol = 1e-6
+  nl_max_its = 30
+  nl_rel_tol = 1e-7
   nl_abs_tol = 1e-8
 
   petsc_options = '-snes_ksp_ew'
   petsc_options_iname = '-pc_type -pc_factor_mat_solver_package'
   petsc_options_value = 'lu    superlu_dist'
-  automatic_scaling = true
-  # line_search = 'bt'
-  end_time = 100.0
+  # automatic_scaling = true
+  line_search = 'bt'
+  end_time = 70.0
   dt = 1.0
 []
 [Outputs]
@@ -264,4 +257,5 @@
   type = Exodus
   # output_material_properties = true
   []
+  csv = true
 []

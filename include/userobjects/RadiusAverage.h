@@ -15,6 +15,7 @@
 #include "MooseUtils.h"
 #include <unordered_map>
 #include <vector>
+
 /**
  * This postprocessor computes a spatial average of the specified
  * variable.
@@ -30,7 +31,7 @@ public:
   virtual void initialize() override;
   virtual void execute() override;
   virtual void threadJoin(const UserObject & uo) override{};
-  virtual Real getAverage(std::size_t elem_id, std::size_t qp) const;
+  virtual std::vector<Real> getAverage(std::size_t elem_id) const;
 
 protected:
   virtual void computeQp();
@@ -49,5 +50,6 @@ protected:
   std::vector<std::pair<std::size_t, std::size_t>> _elem_qp;
   std::vector<Real> _contrib;
   std::vector<Real> _vol;
+
   double _radius;
 };

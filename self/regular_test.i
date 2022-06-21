@@ -1,8 +1,5 @@
 [GlobalParams]
   displacements = 'disp_x disp_y'
-  volumetric_locking_correction = true
-  order = FIRST
-  family = LAGRANGE
 []
 [Problem]
   kernel_coverage_check = false
@@ -10,8 +7,12 @@
 
 [Variables]
   [disp_x]
+  block = 2
+  order= second
   []
   [disp_y]
+  block = 2
+  order= second
   []
 []
 
@@ -22,7 +23,7 @@
     nx = 11
     ny = 11
     # subdomain_ids = 2
-    elem_type = quad4
+    elem_type = quad8
   []
  [subdomain_id]
     type = ElementSubdomainIDGenerator
@@ -46,22 +47,28 @@
     nodes = 0
     input = gen
   [../]
+  # [refine]
+  #   type = RefineBlockGenerator
+  #   input = subdomain_id
+  #   block = '2'
+  #   refinement = '2'
+  #   enable_neighbor_refinement = false
+  # []
 []
 
 [Modules/TensorMechanics/Master]
   [all]
-    # generate_output = 'strain_xx strain_yy strain_zz strain_xy strain_yz strain_xz
-                      #  stress_xx stress_yy stress_zz stress_xy stress_yz stress_xz'
+    generate_output = 'strain_xx strain_yy strain_zz strain_xy strain_yz strain_xz
+                       stress_xx stress_yy stress_zz stress_xy stress_yz stress_xz'
     add_variables = true
-    incremental = true
+       incremental = true
     block = 2
-    use_automatic_differentiation = true
     strain=FINITE
   []
 []
 
 [AuxVariables]
-  [damage_index_local]
+  [damage_index]
     order = CONSTANT
     family = MONOMIAL
     block = 2
@@ -75,6 +82,11 @@
   family = MONOMIAL
   block=2
   []
+  [creep_strain_xx]
+    order = CONSTANT
+    family = MONOMIAL
+    block=2
+  []
     [omega]
     order = CONSTANT
     family = MONOMIAL
@@ -84,25 +96,34 @@
 
 [AuxKernels]
   [damage_local]
-    type = ADMaterialRealAux
-    variable = damage_index_local
-    property = damage_index_local
+    type = MaterialRealAux
+    variable = damage_index
+    property = damage_index
     execute_on = timestep_end
     block = 2 
   []
-  [omega]
-    type = ADMaterialRealAux
+    [omega]
+    type = MaterialRealAux
     variable = omega
     property = omega
     execute_on = timestep_end
     block = 2 
   []
-  [damage_avg]
-  type = ADMaterialRealAux
-  variable = damage_average
-  property = damage_index
-  execute_on = timestep_end
-  block = 2
+  # [damage_avg]
+  # type = MaterialRealAux
+  # variable = damage_average
+  # property = damage_index
+  # execute_on = timestep_end
+  # block = 2
+  # []
+  [creep_strain_xx]
+    type = RankTwoAux
+    variable = creep_strain_xx
+    rank_two_tensor = creep_strain
+    index_j = 0
+    index_i = 0
+    execute_on = timestep_end
+    block=2
   []
 []
 
@@ -114,7 +135,7 @@
   #   value = 0.0
   # []
    [fx2]
-    type = ADDirichletBC
+    type = DirichletBC
     variable = disp_y
     boundary =top_right
     value = 0.0
@@ -127,13 +148,13 @@
   # []
 
   [fy]
-    type = ADFunctionDirichletBC
+    type = FunctionDirichletBC
     variable = disp_x
     boundary = left
     function = pull_rev
   []
   [fy2]
-    type = ADFunctionDirichletBC
+    type = FunctionDirichletBC
     variable = disp_x
     boundary = right
     function = pull
@@ -157,39 +178,39 @@
 
 [Materials]
   [dummy_material]
-    type = GenericConstantMaterial 
+    type = GenericConstantMaterial
     prop_names = 'dummy'
     prop_values = '0.0'
 	  block = 1
   []
- [converter_to_ad]
-    type = MaterialADConverter
-    ad_props_in = damage_index_local
-    reg_props_out = damage_index_local_out
-    block=2
-  []
+
+# [average_mat]
+#   type = AveragedMaterial
+#   ele_uo = "ele_avg"
+#   material_average_name = "material_average"
+#   block = 2
+# []
 [damage]
-    type = ADSteelCreepDamageOhAvg
+    type = SteelCreepDamageOh
     epsilon_f = 0.01
     creep_strain_name = creep_strain
     reduction_factor = 1.0e3
-    use_old_damage = false
+    use_old_damage = true
     creep_law_exponent = 10.0
-    reduction_damage_threshold =  0.9
-    average= "ele_avg"
+    reduction_damage_threshold = 0.9
     block = 2
     damage_index_name = damage_index
     maximum_damage_increment = 0.9999
   []
 
   [radial_return_stress]
-    type = ADComputeMultipleInelasticStress
+    type = ComputeMultipleInelasticStress
     inelastic_models = 'powerlawcrp'
     damage_model = damage
     block = 2
   []
   [powerlawcrp]
-    type = ADPowerLawCreepStressUpdate
+    type = PowerLawCreepStressUpdate
     coefficient = 3.125e-21
     n_exponent = 4.0
     m_exponent = 0.0
@@ -197,38 +218,18 @@
     block=2
   []
   [elasticity]
-    type = ADComputeIsotropicElasticityTensor
+    type = ComputeIsotropicElasticityTensor
     poissons_ratio = 0.2
     youngs_modulus = 10e9
     block=2
   []
 []
-[UserObjects]
-  # [kill_element]
-  #   type = CoupledVarThresholdElementSubdomainModifier
-  #   coupled_var = 'damage_index'
-  #   block = 2
-  #   criterion_type = ABOVE
-  #   threshold = 0.5
-  #   subdomain_id = 1
-  #   execute_on = 'INITIAL timestep_begin'
-  # []
-  [ele_avg]
-    type = RadialAverage
-    material_name = damage_index_local_out
-    execute_on = "initial timestep_begin"
-    block = 2
-    r_cut = 0.05
-    # force_preic =
-    # force_preaux = true
-  []
-[]
+
 [Preconditioning]
   [pc]
     type = SMP
     full = True
   []
-  
 []
 
 # [Postprocessors]
@@ -253,15 +254,11 @@
   petsc_options_iname = '-pc_type -pc_factor_mat_solver_package'
   petsc_options_value = 'lu    superlu_dist'
   automatic_scaling = true
-  # line_search = 'bt'
-  end_time = 100.0
+  line_search = 'bt'
+  end_time = 30.0
   dt = 1.0
 []
 [Outputs]
-  # exodus = true
-  [Exodus]
-  file_base = "self/data/avg"
-  type = Exodus
-  # output_material_properties = true
-  []
+  exodus = true
+  file_base = "self/data/reg"
 []

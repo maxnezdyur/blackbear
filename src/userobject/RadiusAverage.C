@@ -11,7 +11,7 @@
 #include "RadiusAverage.h"
 
 #include "libmesh/quadrature.h"
-registerMooseObject("MooseApp", RadiusAverage);
+registerMooseObject("BlackBearApp", RadiusAverage);
 
 InputParameters
 RadiusAverage::validParams()
@@ -108,14 +108,15 @@ RadiusAverage::computeContribution(Point & p, std::size_t index)
   _elem_to_qp.at(elem_qp.first)[elem_qp.second] /= sum;
 }
 
-Real
-RadiusAverage::getAverage(std::size_t elem_id, std::size_t qp) const
+std::vector<Real>
+RadiusAverage::getAverage(std::size_t elem_id) const
 {
   // return _elem_to_qp.at(elem_id)[qp];
   // find the element or return 0
   if (_elem_to_qp_old.find(elem_id) == _elem_to_qp.end())
-    return 0;
-  return _elem_to_qp_old.at(elem_id)[qp];
+    // ! temp
+    return std::vector<Real>(5, 0);
+  return _elem_to_qp_old.at(elem_id);
 }
 
 Real

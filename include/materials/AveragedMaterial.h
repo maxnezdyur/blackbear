@@ -12,10 +12,9 @@
 /*            See COPYRIGHT for full restrictions               */
 /****************************************************************/
 
+#pragma once
 #include "ADMaterial.h"
 #include "RadiusAverage.h"
-
-#pragma once
 
 class ElementUserObject;
 

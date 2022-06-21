@@ -1,25 +1,25 @@
 [GlobalParams]
   displacements = 'disp_x disp_y'
   volumetric_locking_correction = true
-  order = FIRST
-  family = LAGRANGE
 []
 [Problem]
   kernel_coverage_check = false
 []
 
 [Variables]
-  [disp_x]
-  []
-  [disp_y]
-  []
+[disp_x]
+block = 2
+[]
+[disp_y]
+block = 2
+[]
 []
 
 [Mesh]
   [gen]
     type = GeneratedMeshGenerator
     dim = 2
-    nx = 11
+    nx = 21
     ny = 11
     # subdomain_ids = 2
     elem_type = quad4
@@ -28,17 +28,17 @@
     type = ElementSubdomainIDGenerator
     input = corner_node
     subdomain_ids = '
-    2 2 2 2 2 1 2 2 2 2 2
-    2 2 2 2 2 1 2 2 2 2 2  
-    2 2 2 2 2 2 2 2 2 2 2
-    2 2 2 2 2 2 2 2 2 2 2   
-    2 2 2 2 2 2 2 2 2 2 2
-    2 2 2 2 2 2 2 2 2 2 2
-    2 2 2 2 2 2 2 2 2 2 2
-    2 2 2 2 2 2 2 2 2 2 2
-    2 2 2 2 2 2 2 2 2 2 2
-    2 2 2 2 2 1 2 2 2 2 2 
-    2 2 2 2 2 1 2 2 2 2 2'
+    2 2 2 2 2 2 2 2 2 2 1 2 2 2 2 2 2 2 2 2 2 
+    2 2 2 2 2 2 2 2 2 2 1 2 2 2 2 2 2 2 2 2 2   
+    2 2 2 2 2 2 2 2 2 2 1 2 2 2 2 2 2 2 2 2 2 
+    2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2    
+    2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 
+    2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 
+    2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 
+    2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 
+    2 2 2 2 2 2 2 2 2 2 1 2 2 2 2 2 2 2 2 2 2 
+    2 2 2 2 2 2 2 2 2 2 1 2 2 2 2 2 2 2 2 2 2  
+    2 2 2 2 2 2 2 2 2 2 1 2 2 2 2 2 2 2 2 2 2 '
   []
   [./corner_node]
     type = ExtraNodesetGenerator
@@ -46,13 +46,18 @@
     nodes = 0
     input = gen
   [../]
+  #  [del]
+  #  type = BlockDeletionGenerator
+  #  input = subdomain_id
+  #  block = '1'
+  #[]
 []
 
 [Modules/TensorMechanics/Master]
   [all]
     # generate_output = 'strain_xx strain_yy strain_zz strain_xy strain_yz strain_xz
                       #  stress_xx stress_yy stress_zz stress_xy stress_yz stress_xz'
-    add_variables = true
+    add_variables = false
     incremental = true
     block = 2
     use_automatic_differentiation = true
@@ -83,13 +88,13 @@
 []
 
 [AuxKernels]
-  [damage_local]
-    type = ADMaterialRealAux
-    variable = damage_index_local
-    property = damage_index_local
-    execute_on = timestep_end
-    block = 2 
-  []
+  # [damage_local]
+  #   type = ADMaterialRealAux
+  #   variable = damage_index_local
+  #   property = damage_index_local
+  #   execute_on = timestep_end
+  #   block = 2 
+  # []
   [omega]
     type = ADMaterialRealAux
     variable = omega
@@ -116,7 +121,7 @@
    [fx2]
     type = ADDirichletBC
     variable = disp_y
-    boundary =top_right
+    boundary ="top_right"
     value = 0.0
   []
   # [fx2]
@@ -143,37 +148,37 @@
 [Functions]
   [pull]
     type = PiecewiseLinear
-    x = '0 10000.0'
-    y = '0 0.4'
+    x = '0 100.0'
+    y = '0 0.004'
   []
   [pull_rev]
     type = PiecewiseLinear
-    x = '0 10000.0'
-    y = '0 -0.4'
+    x = '0 100.0'
+    y = '0 -0.004'
   []
 []
 
 
 
 [Materials]
-  [dummy_material]
-    type = GenericConstantMaterial 
-    prop_names = 'dummy'
-    prop_values = '0.0'
-	  block = 1
-  []
- [converter_to_ad]
-    type = MaterialADConverter
-    ad_props_in = damage_index_local
-    reg_props_out = damage_index_local_out
-    block=2
-  []
+   [dummy_material]
+     type = ADGenericConstantMaterial 
+     prop_names = 'dummy'
+     prop_values = '0.0'
+	   block = 1
+   []
+#  [converter_to_ad]
+#     type = MaterialADConverter
+#     ad_props_in = damage_index_local
+#     reg_props_out = damage_index_local_out
+#     block=2
+#   []
 [damage]
-    type = ADSteelCreepDamageOhAvg
+    type = ADSteelCreepDamageOh
     epsilon_f = 0.01
     creep_strain_name = creep_strain
     reduction_factor = 1.0e3
-    use_old_damage = false
+    use_old_damage = true
     creep_law_exponent = 10.0
     reduction_damage_threshold =  0.9
     average= "ele_avg"
@@ -213,15 +218,15 @@
   #   subdomain_id = 1
   #   execute_on = 'INITIAL timestep_begin'
   # []
-  [ele_avg]
-    type = RadialAverage
-    material_name = damage_index_local_out
-    execute_on = "initial timestep_begin"
-    block = 2
-    r_cut = 0.05
-    # force_preic =
-    # force_preaux = true
-  []
+  # [ele_avg]
+  #   type = RadialAverage
+  #   material_name = damage_index_local_out
+  #   execute_on = "initial timestep_begin"
+  #   block = 2
+  #   r_cut = 0.05
+  #   # force_preic =
+  #   # force_preaux = true
+  # []
 []
 [Preconditioning]
   [pc]
@@ -243,24 +248,24 @@
   type = Transient
   solve_type = 'NEWTON'
 
-  l_max_its = 5
+  l_max_its = 30
   l_tol = 1e-14
-  nl_max_its = 10
-  nl_rel_tol = 1e-6
-  nl_abs_tol = 1e-8
+  nl_max_its = 30
+  nl_rel_tol = 1e-8
+  nl_abs_tol = 1e-9
 
   petsc_options = '-snes_ksp_ew'
   petsc_options_iname = '-pc_type -pc_factor_mat_solver_package'
   petsc_options_value = 'lu    superlu_dist'
-  automatic_scaling = true
-  # line_search = 'bt'
-  end_time = 100.0
+  # automatic_scaling = true
+  line_search = "bt"
+  end_time = 50.0
   dt = 1.0
 []
 [Outputs]
   # exodus = true
   [Exodus]
-  file_base = "self/data/avg"
+  file_base = "self/data/bug"
   type = Exodus
   # output_material_properties = true
   []
