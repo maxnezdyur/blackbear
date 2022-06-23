@@ -91,12 +91,6 @@ template <bool is_ad>
 void
 SteelCreepDamageOhAvgTempl<is_ad>::updateQpDamageIndex()
 {
-
-  // if (_qp == 0)
-  //   _average_damage = _average.find(_current_elem->id());
-  // if (_average_damage->second[_qp] < _damage_index_old[_qp])
-  //   _average_damage->second[_qp] = _damage_index_old[_qp];
-
   Real epsilon_f_star;
 
   const auto & stress = MetaPhysicL::raw_value(_stress[_qp]);

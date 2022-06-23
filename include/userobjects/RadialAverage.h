@@ -31,7 +31,7 @@ class ThreadedRadialAverageLoop;
  * a selected variable at each point. Use a KD-Tree to integrate the weighted
  * neighborhood of each QP to obtain the convolution.
  */
-class RadialAverage : public ElementUserObject
+class RadialAverage : public ElementUserObject 
 {
 public:
   static InputParameters validParams();
@@ -79,13 +79,13 @@ protected:
   /// material to be gathered
   const MaterialProperty<Real> & _v;
 
-  /// Green's function cut-off radius
+  /// cut-off radius
   const Real _r_cut;
 
   /// gathered data
   std::vector<QPData> _qp_data;
 
-  /// convolution result
+  /// average result
   Result _average;
 
   using KDTreeType = nanoflann::KDTreeSingleIndexAdaptor<

@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "PointListAdaptor.h"
 #include "RadialAverage.h"
 
 #include "libmesh/nanoflann.hpp"
@@ -44,7 +43,7 @@ public:
 
 protected:
   /// rasterizer to manage the sample data
-  RadialAverage & _green;
+  RadialAverage & _radavg;
 
   /// integral over the convolution contribution
   Real _average_integral;

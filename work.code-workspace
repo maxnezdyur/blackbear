@@ -8,6 +8,13 @@
 		}
 	],
 	"settings": {
+	"clangd.arguments": [
+		"-log=verbose",
+		"-pretty",
+		"--compile-commands-dir=/Users/nezdmn-mac/projects/blackbear/"
+	],
+	"clang-format.language.cpp.style": "/Users/nezdmn-mac/projects/moose/.clang-format",
+	"clang-format.language.c.style": "/Users/nezdmn-mac/projects/moose/.clang-format",
 		"files.associations": {
 			"AverageExtensionRatio.C": "cpp",
 			"NEMLStressBase.C": "cpp",
@@ -188,7 +195,14 @@
 			"RadialAverage.C": "cpp",
 			"AddMaterialAction.C": "cpp",
 			"AddUserObjectAction.C": "cpp",
-			"ADComputeStressBase.C": "cpp"
+			"ADComputeStressBase.C": "cpp",
+			"VerifyNodalUniqueID.C": "cpp",
+			"NearestNodeNumberUO.C": "cpp",
+			"NodalUserObject.C": "cpp",
+			"NodalVectorPostprocessor.C": "cpp",
+			"ComputeNodalUserObjectsThread.C": "cpp",
+			"UserObject.C": "cpp",
+			"ElementUserObject.C": "cpp"
 		}
 	}
 }

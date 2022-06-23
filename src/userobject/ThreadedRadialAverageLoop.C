@@ -9,12 +9,12 @@
 #include "ThreadedRadialAverageLoop.h"
 #include "Function.h"
 
-ThreadedRadialAverageLoop::ThreadedRadialAverageLoop(RadialAverage & green) : _green(green) {}
+ThreadedRadialAverageLoop::ThreadedRadialAverageLoop(RadialAverage & green) : _radavg(green) {}
 
 // Splitting Constructor
 ThreadedRadialAverageLoop::ThreadedRadialAverageLoop(const ThreadedRadialAverageLoop & x,
                                                      Threads::split /*split*/)
-  : _green(x._green)
+  : _radavg(x._radavg)
 {
 }
 
@@ -22,16 +22,16 @@ void
 ThreadedRadialAverageLoop::operator()(const QPDataRange & qpdata_range)
 {
   // fetch data from parent
-  const auto r_cut = _green._r_cut;
-  const auto & qp_data = _green._qp_data;
-  const auto & kd_tree = _green._kd_tree;
+  const auto r_cut = _radavg._r_cut;
+  const auto & qp_data = _radavg._qp_data;
+  const auto & kd_tree = _radavg._kd_tree;
 
   // tree search data structures
   std::vector<std::pair<std::size_t, Real>> ret_matches;
   nanoflann::SearchParams search_params;
 
   // result map entry
-  const auto end_it = _green._average.end();
+  const auto end_it = _radavg._average.end();
   auto it = end_it;
 
   // iterate over qp range
@@ -40,7 +40,7 @@ ThreadedRadialAverageLoop::operator()(const QPDataRange & qpdata_range)
     // Look up result map iterator only if we enter a new element. this saves a bunch
     // of map lookups because same element entries are consecutive in the qp_data vector.
     if (it == end_it || it->first != local_qp._elem_id)
-      it = _green._average.find(local_qp._elem_id);
+      it = _radavg._average.find(local_qp._elem_id);
 
     // initialize result entry
     mooseAssert(it != end_it, "Current element id not found in result set.");

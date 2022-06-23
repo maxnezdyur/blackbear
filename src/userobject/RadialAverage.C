@@ -33,9 +33,9 @@ InputParameters
 RadialAverage::validParams()
 {
   InputParameters params = ElementUserObject::validParams();
-  params.addClassDescription("Perform a radial Green's function convolution");
+  params.addClassDescription("Perform a radial equal weight average of a material property");
   params.addRequiredParam<std::string>("material_name", "Name of the material to average.");
-  params.addRequiredParam<Real>("r_cut", "Cut-off radius for the Green's function");
+  params.addRequiredParam<Real>("r_cut", "Cut-off radius for the averaging");
 
   // we run this object once at the beginning of the timestep by default
   params.set<ExecFlagEnum>("execute_on") = EXEC_TIMESTEP_BEGIN;
@@ -49,7 +49,7 @@ RadialAverage::validParams()
 }
 
 RadialAverage::RadialAverage(const InputParameters & parameters)
-  : ElementUserObject(parameters),
+  : ElementUserObject(parameters), 
     _v_name(getParam<std::string>("material_name")),
     _v(getMaterialProperty<Real>(_v_name)),
     _r_cut(getParam<Real>("r_cut")),
@@ -65,9 +65,6 @@ RadialAverage::RadialAverage(const InputParameters & parameters)
 void
 RadialAverage::initialSetup()
 {
-  // Get a pointer to the PeriodicBoundaries buried in libMesh
-  // _pbs = _fe_problem.getNonlinearSystemBase().dofMap().get_periodic_boundaries();
-
   // set up processor boundary node list
   meshChanged();
 }

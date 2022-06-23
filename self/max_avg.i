@@ -167,14 +167,14 @@
     hardening_constant = 0
     absolute_tolerance = 1e-11
     relative_tolerance = 1e-9
-    max_inelastic_increment = 1000.0
+    max_inelastic_increment = 1e-3
   []
 []
 [UserObjects]
   [ele_avg]
     type = RadialAverage
     material_name = damage_index_local_out
-    execute_on = "initial timestep_begin"
+    execute_on = "timestep_end"
     r_cut = 1.0
   []
 []
