@@ -31,7 +31,7 @@ class ThreadedRadialAverageLoop;
  * a selected variable at each point. Use a KD-Tree to integrate the weighted
  * neighborhood of each QP to obtain the convolution.
  */
-class RadialAverage : public ElementUserObject 
+class RadialAverage : public ElementUserObject
 {
 public:
   static InputParameters validParams();

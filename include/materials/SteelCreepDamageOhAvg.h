@@ -16,7 +16,6 @@
 
 #include "ScalarDamageBase.h"
 #include "GuaranteeConsumer.h"
-// #include "RadiusAverage.h"
 #include "RadialAverage.h"
 
 /**

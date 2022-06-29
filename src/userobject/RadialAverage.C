@@ -49,7 +49,7 @@ RadialAverage::validParams()
 }
 
 RadialAverage::RadialAverage(const InputParameters & parameters)
-  : ElementUserObject(parameters), 
+  : ElementUserObject(parameters),
     _v_name(getParam<std::string>("material_name")),
     _v(getMaterialProperty<Real>(_v_name)),
     _r_cut(getParam<Real>("r_cut")),
