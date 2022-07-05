@@ -226,7 +226,7 @@ RadialAverage::insertNotLocalPointNeighbors(dof_id_type node)
   mooseAssert(!_nodes_to_elem_map[node].empty(), "Node not found in _nodes_to_elem_map");
 
   for (const auto * elem : _nodes_to_elem_map[node])
-    if (elem->processor_id() != _my_pid)
+    if (elem->processor_id() != _my_pid && elem->active())
       _point_neighbors.insert(elem);
 }
 
