@@ -5,7 +5,7 @@
   family = LAGRANGE
 []
 [Problem]
-  kernel_coverage_check = false
+  # kernel_coverage_check = false 
   extra_tag_vectors = 'ref'
 []
 
@@ -16,8 +16,14 @@
 [Mesh]
   [gen]
     type = FileMeshGenerator
-    file = /Users/nezdmn-mac/projects/blackbear/self/notch/notched_plate.e
+    file = /scratch/nezdmn/projects/blackbear/self/notch/notched_plate_refined.e
   []
+  [./corner_node]
+    type = ExtraNodesetGenerator
+    new_boundary = top_right
+    nodes = 0
+    input = gen
+  [../]
 []
 
 [Modules/TensorMechanics/Master]
@@ -94,7 +100,7 @@
   [fx2]
     type = ADDirichletBC
     variable = disp_x
-    boundary = "1 2"
+    boundary = top_right
     value = 0.0
   []
   [fy]
@@ -160,17 +166,17 @@
     block = 1
   []
 []
-[UserObjects]
-  # [kill_element]
-  #   type = CoupledVarThresholdElementSubdomainModifier
-  #   coupled_var = 'damage_index'
-  #   block = 1
-  #   criterion_type = ABOVE
-  #   threshold = 0.5
-  #   subdomain_id = 1
-  #   execute_on = 'INITIAL timestep_begin'
-  # []
-[]
+# [UserObjects]
+#   # [kill_element]
+#   #   type = CoupledVarThresholdElementSubdomainModifier
+#   #   coupled_var = 'damage_index'
+#   #   block = 1
+#   #   criterion_type = ABOVE
+#   #   threshold = 0.5
+#   #   subdomain_id = 1
+#   #   execute_on = 'INITIAL timestep_begin'
+#   # []
+# []
 [Preconditioning]
   [pc]
     type = SMP
@@ -186,11 +192,11 @@
   #boundary = right
   #block = 1
   #[]
-  [react_x]
-    type = NodalSum
-    variable = saved_x
-    boundary = "1"
-  []
+  # [react_x]
+  #   type = NodalSum
+  #   variable = saved_x
+  #   boundary = '1'
+  # []
 []
 
 [Executioner]
@@ -209,13 +215,15 @@
   # automatic_scaling = true
   line_search = 'bt'
   end_time = 70.0
-  dt = 0.01
+  dt = 0.001
 []
 [Outputs]
   # exodus = true
   [Exodus]
     file_base = "self/notch/data/local"
     type = Exodus
+    append_date = true
+    interval = 1000
     # output_material_properties = true
   []
   csv = true
