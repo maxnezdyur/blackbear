@@ -12,31 +12,29 @@
     #  order = second
  []
 []
+
 [Mesh]
   [gen]
     type = GeneratedMeshGenerator
     dim = 2
-    nx = 10
-    ny = 10
-    # nz = 10
-    # subdomain_ids = 2
-    # elem_type = quad8
+    nx = 5
+    ny = 5
   []
 []
 
 
-# [AuxVariables]
-# [average]
-# []
-# []
+ [AuxVariables]
+ [average]
+ []
+ []
 
-# [AuxKernels]
-#  [averger]
-#  type=ElementUOAux
-#  element_user_object = ele_avg
-#  variable = average
-#  []
-# []
+ [AuxKernels]
+  [averger]
+  type=RadialAverageAux
+  average  = ele_avg
+  variable = average
+  []
+ []
 
 
 [Materials]
@@ -52,9 +50,8 @@
     material_name = constant
     execute_on = "timestep_end"
     # block = 2
-    r_cut = 0.1
-    # force_preic =
-    # force_preaux = true
+    r_cut = 0.2
+
   []
 []
 [Preconditioning]
@@ -62,16 +59,8 @@
     type = SMP
     full = True
   []
-  
 []
 
-# [Postprocessors]
-#   [damage_index]
-#     type = ElementAverageValue
-#     variable = damage_index
-#     block = 2
-#   []
-# []
 
 [Executioner]
   type = Transient

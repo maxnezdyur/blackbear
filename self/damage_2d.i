@@ -11,20 +11,19 @@
 []
 
 [Variables]
-  [./disp_x]
-  [../]
-  [./disp_y]
-  [../]
+  [disp_x]
+  []
+  [disp_y]
+  []
 []
 [Kernels]
   [TensorMechanics]
-  strain = FINITE
-  # incremental = true
+    strain = FINITE
+    # incremental = true
   []
 []
 
 [AuxVariables]
-  
   [damage_index]
     order = CONSTANT
     family = MONOMIAL
@@ -117,4 +116,3 @@
   exodus = true
   csv = true
 []
-

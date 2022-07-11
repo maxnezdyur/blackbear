@@ -34,6 +34,8 @@ public:
 protected:
   virtual void updateQpDamageIndex() override;
 
+  virtual Real getDamageIndex();
+
   std::string _creep_strain_name;
 
   ///@{ Creep strain tensors
@@ -90,7 +92,6 @@ protected:
   using ScalarDamageBaseTempl<is_ad>::_JxW;
   using ScalarDamageBaseTempl<is_ad>::_coord;
   ///@}
-  Real getDamageIndex();
 };
 
 typedef SteelCreepDamageOhAvgTempl<false> SteelCreepDamageOhAvg;

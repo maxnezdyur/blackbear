@@ -6,6 +6,7 @@
 []
 [Problem]
   kernel_coverage_check = false
+    extra_tag_vectors = 'ref'
 []
 
 [Variables]
@@ -61,6 +62,7 @@
     block = 2
     use_automatic_differentiation = true
     strain=FINITE
+        extra_vector_tags = 'ref'
   []
 []
 
@@ -84,6 +86,12 @@
     family = MONOMIAL
     block = 2
   []
+    [saved_x]
+  order = SECOND
+  []
+  [saved_y]
+  order = SECOND
+  []
 []
 
 [AuxKernels]
@@ -101,6 +109,18 @@
   execute_on = timestep_end
   block = 2
   []
+   [saved_x]
+    type = TagVectorAux
+    vector_tag = 'ref'
+    v = 'disp_x'
+    variable = 'saved_x'
+  []
+  [saved_y]
+    type = TagVectorAux
+    vector_tag = 'ref'
+    v = 'disp_y'
+    variable = 'saved_y'
+[]
 []
 
 [BCs]
@@ -195,12 +215,17 @@
 []
 
 [Postprocessors]
-  [reaction_force_x]
-  type = ADSidesetReaction
-  direction = '1 0 0'
-  stress_tensor = stress
-  boundary = right
-  block = 2
+  #[reaction_force_x]
+  #type = ADSidesetReaction
+  #direction = '1 0 0'
+  #stress_tensor = stress
+  #boundary = right
+  #block = 2
+  #[]
+      [react_x]
+    type = NodalSum
+    variable = saved_x
+    boundary = "right"
   []
 []
 
@@ -220,7 +245,7 @@
   # automatic_scaling = true
   line_search = 'bt'
   end_time = 70.0
-  dt = 1.0
+  dt = 0.01
 []
 [Outputs]
   # exodus = true

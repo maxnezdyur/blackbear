@@ -15,7 +15,7 @@
 [Mesh]
   [gen]
     type = FileMeshGenerator
-    file = /scratch/nezdmn/projects/blackbear/self/notch/notched_plate_refined.e
+    file = /Users/nezdmn-mac/projects/blackbear/self/notch/notched_plate_refined.e
   []
   [./corner_node]
     type = ExtraNodesetGenerator
@@ -64,6 +64,10 @@
   [saved_y]
     # order = SECOND
   []
+  [proc_id]
+    order = CONSTANT
+    family = MONOMIAL
+  []
 []
 
 [AuxKernels]
@@ -100,6 +104,11 @@
     vector_tag = 'ref'
     v = 'disp_y'
     variable = 'saved_y'
+  []
+  [proc_id]
+    type = ProcessorIDAux
+    variable = proc_id
+    execute_on = "INITIAL"
   []
 []
 
