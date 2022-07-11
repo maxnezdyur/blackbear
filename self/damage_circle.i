@@ -202,6 +202,7 @@
     execute_on = 'INITIAL timestep_begin'
   []
 []
+
 [Materials]
   [strain]
     type = ComputeFiniteStrain

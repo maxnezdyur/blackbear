@@ -1,15 +1,16 @@
 [GlobalParams]
   displacements = 'disp_x disp_y'
   volumetric_locking_correction = true
-  order = FIRST
-  family = LAGRANGE
+  #order = FIRST
+  #family = LAGRANGE
 []
 [Problem]
   kernel_coverage_check = false
+    extra_tag_vectors = 'ref'
 []
 
 [Variables]
- 
+
 []
 
 [Mesh]
@@ -45,21 +46,11 @@
     nodes = 0
     input = gen
   [../]
-  [./delete]
-  type = BlockDeletionGenerator
-  input = subdomain_id
-  block = '1'
+    [./delete]
+    type = BlockDeletionGenerator
+    input = subdomain_id
+    block = '1'
   [../]
-  [add_element]
-    type = GeneratedMeshGenerator
-    dim = 2
-    subdomain_ids = 1
-    elem_type = 'quad4' 
-  []
-[combine_mesh]
-   type = MeshCollectionGenerator
-    inputs = 'delete add_element'
-[]
 []
 
 [Modules/TensorMechanics/Master]
@@ -71,6 +62,7 @@
     block = 2
     use_automatic_differentiation = true
     strain=FINITE
+        extra_vector_tags = 'ref'
   []
 []
 
@@ -80,26 +72,29 @@
     family = MONOMIAL
     block = 2
   []
+  [./min]
+    order = CONSTANT
+    family = MONOMIAL
+  [../]
   [damage_average]
   order = CONSTANT
   family = MONOMIAL
   block=2
   []
-    [omega]
+  [omega]
     order = CONSTANT
     family = MONOMIAL
     block = 2
   []
+    [saved_x]
+
+  []
+  [saved_y]
+
+  []
 []
 
 [AuxKernels]
-  [damage_local]
-    type = ADMaterialRealAux
-    variable = damage_index_local
-    property = damage_index_local
-    execute_on = timestep_end
-    block = 2 
-  []
   [omega]
     type = ADMaterialRealAux
     variable = omega
@@ -114,6 +109,18 @@
   execute_on = timestep_end
   block = 2
   []
+   [saved_x]
+    type = TagVectorAux
+    vector_tag = 'ref'
+    v = 'disp_x'
+    variable = 'saved_x'
+  []
+  [saved_y]
+    type = TagVectorAux
+    vector_tag = 'ref'
+    v = 'disp_y'
+    variable = 'saved_y'
+[]
 []
 
 [BCs]
@@ -153,30 +160,18 @@
 
 
 [Materials]
-   [dummy_material]
-     type = ADGenericConstantMaterial 
-     prop_names = 'dummy'
-     prop_values = '0.0'
-	   block = 1
-   []
- [converter_to_ad]
-    type = MaterialADConverter
-    ad_props_in = damage_index_local
-    reg_props_out = damage_index_local_out
-    block=2
-  []
 [damage]
-    type = ADSteelCreepDamageOhAvg
+    type = ADSteelCreepDamageOh
     epsilon_f = 0.01
     creep_strain_name = creep_strain
     reduction_factor = 1.0e3
-    use_old_damage = false
+    use_old_damage = true
     creep_law_exponent = 10.0
-    reduction_damage_threshold =  0.9
-    average= "ele_avg"
+    reduction_damage_threshold =  0.7
+    # average= "ele_avg"
     block = 2
     damage_index_name = damage_index
-    maximum_damage_increment = 0.9999
+    #maximum_damage_increment = 0.9999
   []
 
   [radial_return_stress]
@@ -201,26 +196,15 @@
   []
 []
 [UserObjects]
- #[kill_element]
- #  type = CoupledVarThresholdElementSubdomainModifier
- #  coupled_var = 'damage_average'
- #  block = 2
- #  criterion_type = ABOVE
- #  threshold = 0.9
- #  subdomain_id = 1
- #  execute_on = 'TIMESTEP_END'
- #  force_preaux = false
- #[]
-  [ele_avg]
-    type = RadialAverage
-    material_name = damage_index_local_out
-    execute_on = "TIMESTEP_BEGIN"
-    block = 2
-    r_cut = 0.1
-    #force_postaux = true
-    # force_preic =
-    # force_preaux = true
-  []
+  # [kill_element]
+  #   type = CoupledVarThresholdElementSubdomainModifier
+  #   coupled_var = 'damage_index'
+  #   block = 2
+  #   criterion_type = ABOVE
+  #   threshold = 0.5
+  #   subdomain_id = 1
+  #   execute_on = 'INITIAL timestep_begin'
+  # []
 []
 [Preconditioning]
   [pc]
@@ -230,13 +214,20 @@
   
 []
 
-# [Postprocessors]
-#   [damage_index]
-#     type = ElementAverageValue
-#     variable = damage_index
-#     block = 2
-#   []
-# []
+[Postprocessors]
+  #[reaction_force_x]
+  #type = ADSidesetReaction
+  #direction = '1 0 0'
+  #stress_tensor = stress
+  #boundary = right
+  #block = 2
+  #[]
+      [react_x]
+    type = NodalSum
+    variable = saved_x
+    boundary = "right"
+  []
+[]
 
 [Executioner]
   type = Transient
@@ -254,13 +245,15 @@
   # automatic_scaling = true
   line_search = 'bt'
   end_time = 70.0
-  dt = 1.0
+  dt = 0.01
+  
 []
 [Outputs]
   # exodus = true
   [Exodus]
-  file_base = "self/data/avg"
+  file_base = "self/data/local"
   type = Exodus
   # output_material_properties = true
   []
+  csv = true
 []

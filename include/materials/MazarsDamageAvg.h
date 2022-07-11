@@ -1,0 +1,91 @@
+/****************************************************************/
+/*               DO NOT MODIFY THIS HEADER                      */
+/*                       BlackBear                              */
+/*                                                              */
+/*           (c) 2017 Battelle Energy Alliance, LLC             */
+/*                   ALL RIGHTS RESERVED                        */
+/*                                                              */
+/*          Prepared by Battelle Energy Alliance, LLC           */
+/*            Under Contract No. DE-AC07-05ID14517              */
+/*            With the U. S. Department of Energy               */
+/*                                                              */
+/*            See COPYRIGHT for full restrictions               */
+/****************************************************************/
+
+#pragma once
+
+#include "MaterialProperty.h"
+#include "ScalarDamageBase.h"
+#include "GuaranteeConsumer.h"
+#include "libmesh/libmesh_common.h"
+#include "RadialAverage.h"
+
+// Forward declaration
+template <typename>
+class RankTwoTensorTempl;
+typedef RankTwoTensorTempl<Real> RankTwoTensor;
+template <typename>
+class RankFourTensorTempl;
+typedef RankFourTensorTempl<Real> RankFourTensor;
+
+/**
+ * Scalar damage model that defines the damage parameter using a material property
+ */
+class MazarsDamageAvg : public ScalarDamageBase, public GuaranteeConsumer
+{
+public:
+  static InputParameters validParams();
+  MazarsDamageAvg(const InputParameters & parameters);
+
+  virtual void initQpStatefulProperties() override;
+  virtual void initialSetup() override;
+
+protected:
+  virtual void updateQpDamageIndex() override;
+  virtual Real getDamageIndex();
+
+  /// Tensile strength of material
+  const VariableValue & _tensile_strength;
+
+  ///@{ Parameters that control the shape of the nonlinear material response
+  const Real & _a_t;
+  const Real & _a_c;
+  const Real & _b_t;
+  const Real & _b_c;
+  ///@}
+
+  ///@{ Internal damage variable kappa that tracks the maximum equivalent tensile strain
+  MaterialProperty<Real> & _kappa;
+  const MaterialProperty<Real> & _kappa_old;
+  ///@}
+
+  /// Current stress
+  const MaterialProperty<RankTwoTensor> & _stress;
+
+  /// Current mechanical strain
+  const MaterialProperty<RankTwoTensor> & _mechanical_strain;
+
+  /// Name of elasticity tensor
+  const std::string _elasticity_tensor_name;
+
+  /// Current undamaged elasticity tensor
+  const MaterialProperty<RankFourTensor> & _elasticity_tensor;
+
+  /// Computed eigenvalues. Re-used for efficiency.
+  std::vector<Real> _eigval;
+
+  /// Positive components of stress tensor. Re-used for efficiency.
+  std::vector<Real> _positive_stress;
+
+  /// Positive components of strain tensor. Re-used for efficiency.
+  std::vector<Real> _positive_strain;
+
+  ///
+  MaterialProperty<Real> & _damage_index_local;
+  const MaterialProperty<Real> & _damage_index_local_old;
+
+  // Averaged Material
+  // std::string _avg_material_name;
+  const RadialAverage::Result & _average;
+  RadialAverage::Result::const_iterator _average_damage;
+};

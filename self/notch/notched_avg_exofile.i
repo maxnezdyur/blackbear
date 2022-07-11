@@ -15,7 +15,7 @@
 [Mesh]
   [gen]
     type = FileMeshGenerator
-    file = /Users/nezdmn-mac/projects/blackbear/self/notch/notched_plate.e
+    file = /Users/nezdmn-mac/projects/blackbear/self/notch/notched_plate_refined.e
   []
 []
 
@@ -58,6 +58,10 @@
   [saved_y]
     # order = SECOND
   []
+  [proc_id]
+    order = CONSTANT
+    family = MONOMIAL
+  []
 []
 
 [AuxKernels]
@@ -94,6 +98,11 @@
     vector_tag = 'ref'
     v = 'disp_y'
     variable = 'saved_y'
+  []
+  [proc_id]
+    type = ProcessorIDAux
+    variable = proc_id
+    execute_on = "INITIAL"
   []
 []
 
@@ -194,7 +203,7 @@
     material_name = damage_index_local_out
     execute_on = "timestep_end"
     block = 1
-    r_cut = 0.05
+    r_cut = 1.0
     # force_preic =
     # force_preaux = true
   []
