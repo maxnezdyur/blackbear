@@ -63,20 +63,6 @@
     top_right = '200.1 0.0001 0'
     new_boundary = bottom_right_2
   []
-  [subbloc]
-    type = SubdomainBoundingBoxGenerator
-    bottom_left = '-0.1 50 0'
-    top_right = '200.1 150 0'
-    block_id = 1
-    input = ss_4
-  []
-  # [refine_inside]
-  #   type = RefineBlockGenerator
-  #   input = subbloc
-  #   refinement = 1
-  #   enable_neighbor_refinement = true
-  #   block = 1
-  # []
 []
 
 [Modules/TensorMechanics/Master]
@@ -84,7 +70,7 @@
     strain = FINITE
     incremental = true
     add_variables = true
-    block = '0 1'
+ block = 0
     use_automatic_differentiation = false
     extra_vector_tags = 'ref'
   []
@@ -226,7 +212,7 @@
     type = RadialAverage
     material_name = damage_index_local
     execute_on = "timestep_end"
-    block = '0 1'
+ block = 0
     r_cut = 5.01
   []
 []

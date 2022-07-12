@@ -70,7 +70,8 @@
     strain = FINITE
     incremental = true
     add_variables = true
-    block = 0
+    # planar_formulation = PLANE_STRAIN
+  block = 0
     use_automatic_differentiation = false
     extra_vector_tags = 'ref'
   []
@@ -106,12 +107,12 @@
   [force_cont]
     type = PiecewiseLinear
     x = '0 1.0 5.0'
-    y = '0 10000 10000'
+    y = '0 150 150'
   []
   [disp_cont]
     type = PiecewiseLinear
     x = '0 1.0 20.0'
-    y = '0 0.0 0.02'
+    y = '0 0.0 0.2'
   []
 []
 [AuxVariables]
@@ -156,35 +157,35 @@
     execute_on = "INITIAL"
   []
 []
-[Constraints]
-  [x_top]
-    type = EqualValueBoundaryConstraint
-    variable = disp_x
-    secondary = left_top_2
-    penalty = 10e6
-  []
-  [y_left]
-    type = EqualValueBoundaryConstraint
-    variable = disp_y
-    secondary = left_top_1
-    penalty = 10e6
-  []
-  [x_left]
-    type = EqualValueBoundaryConstraint
-    variable = disp_x
-    secondary = left_top_1
-    penalty = 10e6
-  []
-[]
+# [Constraints]
+#   [x_top]
+#     type = EqualValueBoundaryConstraint
+#     variable = disp_x
+#     secondary = left_top_2
+#     penalty = 10e9
+#   []
+#   [y_left]
+#     type = EqualValueBoundaryConstraint
+#     variable = disp_y
+#     secondary = left_top_1
+#     penalty = 10e9
+#   []
+#   [x_left]
+#     type = EqualValueBoundaryConstraint
+#     variable = disp_x
+#     secondary = left_top_1
+#     penalty = 10e9
+#   []
+# []
 
 [Materials]
   [damage]
     type = MazarsDamage
-    tensile_strength = 1e6
-    a_t = 0.87
-    a_c = 0.65
-    b_t = 20000
-    b_c = 2150
+    tensile_strength = 10
+    a_t = 0.98
+    a_c = 0.98
+    b_t = 220
+    b_c = 141
     use_old_damage = true
     # strain_base_name = mechanical_strain_reg
   []
@@ -194,14 +195,15 @@
   []
   [elasticity]
     type = ComputeIsotropicElasticityTensor
-    poissons_ratio = 0.3
-    youngs_modulus = 10e9
+    poissons_ratio = 0.2
+    youngs_modulus = 46000
   []
 []
 [Postprocessors]
   [react_y]
-    type = NodalSum
-    variable = saved_y
+    type = SidesetReaction
+    direction = '0 1 0'
+    stress_tensor = stress
     boundary = left_top_2
   []
 []
@@ -221,13 +223,13 @@
   nl_rel_tol = 1e-5
   nl_abs_tol = 1e-6
 
-  dt = 0.1
+  dt = 0.05
   dtmin = 1e-8
   end_time = 20.0
 []
 
 [Outputs]
   exodus = true
-  file_base = mazars/results/mazars_avg/mazars_avg_82
+  file_base = mazars/results/mazars_local/mazars_local_test
   csv = true
 []
