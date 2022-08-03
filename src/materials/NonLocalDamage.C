@@ -52,7 +52,6 @@ NonLocalDamageTempl<is_ad>::initialSetup()
     this->template paramError("damage_model",
                               "Damage Model " + _local_damage_model_name +
                                   " is not compatible with NonLocalDamage model");
-  _average_damage = _average.find(-1);
 }
 
 template <bool is_ad>
