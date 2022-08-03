@@ -41,9 +41,14 @@ protected:
   // std::string _avg_material_name;
   const RadialAverage::Result & _average;
   RadialAverage::Result::const_iterator _average_damage;
-  //
+
+  ///{@ Local damage model needed for updating
   MaterialName _local_damage_model_name;
   ScalarDamageBaseTempl<is_ad> * _local_damage_model;
+  ///@}
+
+  // Pointer to last element for comparison for speed
+  const Elem * _prev_elem;
 
   ///@{ Make hierarchy parameters available in this class
   using ScalarDamageBaseTempl<is_ad>::_damage_index;

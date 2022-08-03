@@ -14,14 +14,6 @@
 
 #include "NonLocalDamage.h"
 
-#include "RankTwoTensor.h"
-#include "RankFourTensor.h"
-#include "ElasticityTensorTools.h"
-#include "MooseUtils.h"
-#include <cmath>
-#include "RankTwoScalarTools.h"
-#include "libmesh/utility.h"
-
 registerMooseObject("BlackBearApp", NonLocalDamage);
 registerMooseObject("BlackBearApp", ADNonLocalDamage);
 
@@ -45,7 +37,8 @@ NonLocalDamageTempl<is_ad>::NonLocalDamageTempl(const InputParameters & paramete
   : ScalarDamageBaseTempl<is_ad>(parameters),
     GuaranteeConsumer(this),
     _average(this->template getUserObject<RadialAverage>("average_UO").getAverage()),
-    _local_damage_model_name(this->template getParam<MaterialName>("local_damage_model"))
+    _local_damage_model_name(this->template getParam<MaterialName>("local_damage_model")),
+    _prev_elem(nullptr)
 {
 }
 template <bool is_ad>
@@ -77,9 +70,11 @@ NonLocalDamageTempl<is_ad>::updateQpDamageIndex()
   _local_damage_model->getQpDamageIndex(_qp);
   // Now update the nonlocal damage model
   // Only update iterator when we change to another element
-  if (_qp == 0)
+  if (_prev_elem != _current_elem)
+  {
     _average_damage = _average.find(_current_elem->id());
-  // _prev_elem_id = _current_elem->id()
+    _prev_elem = _current_elem;
+  }
   // Make sure that we find the new element if not return 0
   if (_average_damage != _average.end())
     // return max of the old damage or new average damage
