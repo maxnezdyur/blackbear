@@ -14,7 +14,7 @@
 		"--compile-commands-dir=/Users/nezdmn-mac/projects/blackbear/"
 	],
 	"clang-format.language.cpp.style": "/Users/nezdmn-mac/projects/moose/.clang-format",
-	"clang-format.language.c.style": "/Users/nezdmn-mac/projects/moose/.clang-format",
+	// "clang-format.language.c.style": "/Users/nezdmn-mac/projects/moose/.clang-format",
 		"files.associations": {
 			"AverageExtensionRatio.C": "cpp",
 			"NEMLStressBase.C": "cpp",

@@ -175,11 +175,10 @@ SteelCreepDamageOhAvgTempl<is_ad>::getDamageIndex()
   if (_qp == 0)
     _average_damage = _average.find(_current_elem->id());
   if (_average_damage != _average.end())
-    if (_average_damage->second[_qp] < _damage_index_old[_qp])
-      return _damage_index_old[_qp];
-    else
-      return _average_damage->second[_qp];
+    // return max of the old damage or new average damage
+    return std::max(_average_damage->second[_qp], _damage_index_old[_qp]);
   else
+    // during startup the map is not made yet
     return 0.0;
 }
 

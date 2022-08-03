@@ -20,6 +20,7 @@
 #include "MooseUtils.h"
 
 #include "libmesh/utility.h"
+#include <algorithm>
 
 registerMooseObject("BlackBearApp", MazarsDamageAvg);
 
@@ -133,6 +134,7 @@ MazarsDamageAvg::updateQpDamageIndex()
   // Prevent damage index from decreasing or from being greater than 1
   _damage_index_local[_qp] = std::max(_damage_index_local[_qp], _damage_index_local_old[_qp]);
   _damage_index_local[_qp] = std::min(_damage_index_local[_qp], 1.0);
+  // Get damage index used computing damage stress
   _damage_index[_qp] = getDamageIndex();
 }
 
@@ -142,10 +144,9 @@ MazarsDamageAvg::getDamageIndex()
   if (_qp == 0)
     _average_damage = _average.find(_current_elem->id());
   if (_average_damage != _average.end())
-    if (_average_damage->second[_qp] < _damage_index_old[_qp])
-      return _damage_index_old[_qp];
-    else
-      return _average_damage->second[_qp];
+    // return max of the old damage or new average damage
+    return std::max(_average_damage->second[_qp], _damage_index_old[_qp]);
   else
+    // during startup the map is not made yet
     return 0.0;
 }

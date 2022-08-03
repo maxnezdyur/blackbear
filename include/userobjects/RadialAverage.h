@@ -28,8 +28,8 @@ class ThreadedRadialAverageLoop;
 
 /**
  * Gather and communicate a full list of all quadrature points and the values of
- * a selected variable at each point. Use a KD-Tree to integrate the weighted
- * neighborhood of each QP to obtain the convolution.
+ * a selected variable at each point. Use a KD-Tree to get the weighted spatial
+ * average of a material property.
  */
 class RadialAverage : public ElementUserObject
 {

@@ -70,13 +70,11 @@
     strain = FINITE
     incremental = true
     add_variables = true
-    # planar_formulation = PLANE_STRAIN
     block = 0
     use_automatic_differentiation = false
     extra_vector_tags = 'ref'
   []
 []
-
 [BCs]
   [hold_b_r_x]
     type = DirichletBC
@@ -111,8 +109,9 @@
   []
   [disp_cont]
     type = PiecewiseLinear
-    x = '0 1.0 20.0'
-    y = '0 0.0 0.2'
+    x = '0 1.0'
+    y = '0 1.0'
+    extrap = true
   []
 []
 [AuxVariables]
@@ -123,7 +122,7 @@
     order = CONSTANT
     family = MONOMIAL
   []
-  [damage_local]
+  [local_damage]
     order = CONSTANT
     family = MONOMIAL
   []
@@ -139,18 +138,18 @@
     v = 'disp_y'
     variable = 'saved_y'
   []
-  [damage]
+  [nonlocal_damage]
     type = MaterialRealAux
     variable = damage
-    property = damage_index
+    property = nonlocal_damage
     execute_on = timestep_end
   []
-  # [damage_local]
-  # type = MaterialRealAux
-  # variable = damage_local
-  # property = damage_index_local
-  # execute_on = TIMESTEP_END
-  # []
+  [local_damage]
+    type = MaterialRealAux
+    variable = local_damage
+    property = local_damage
+    execute_on = TIMESTEP_END
+  []
   [proc_id]
     type = ProcessorIDAux
     variable = proc_id
@@ -178,20 +177,34 @@
 #   []
 # []
 
+[UserObjects]
+  [ele_avg]
+    type = RadialAverage
+    material_name = local_damage
+    execute_on = "timestep_end"
+    block = 0
+    r_cut = 2.01
+  []
+[]
 [Materials]
-  [damage]
+  [maz_local]
     type = MazarsDamage
     tensile_strength = 10
     a_t = 0.98
     a_c = 0.98
     b_t = 220
     b_c = 141
-    use_old_damage = true
-    # strain_base_name = mechanical_strain_reg
+    damage_index_name = local_damage
+  []
+  [nonlocal]
+    type = NonLocalDamage
+    average_UO = ele_avg
+    damage_index_name = nonlocal_damage
+    local_damage_model = maz_local
   []
   [stress]
     type = ComputeDamageStress
-    damage_model = damage
+    damage_model = 'nonlocal'
   []
   [elasticity]
     type = ComputeIsotropicElasticityTensor
@@ -226,10 +239,11 @@
   dt = 0.05
   dtmin = 1e-8
   end_time = 20.0
+  # timestep_tolerance = 1e-7
 []
 
 [Outputs]
   exodus = true
-  file_base = mazars/results/mazars_local/mazars_local_test
+  file_base = mazars/results/new_sys/mazars_avg_test
   csv = true
 []

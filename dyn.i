@@ -1,6 +1,6 @@
 [GlobalParams]
   displacements = 'disp_x disp_y'
-  volumetric_locking_correction = true
+  # volumetric_locking_correction = true
 []
 [Problem]
   extra_tag_vectors = 'ref'
@@ -64,19 +64,18 @@
     new_boundary = bottom_right_2
   []
 []
-
-[Modules/TensorMechanics/Master]
+[Modules/TensorMechanics/DynamicMaster]
   [all]
     strain = FINITE
-    incremental = true
+    incremental = false
+    new_system = true
+    formulation = TOTAL
     add_variables = true
-    # planar_formulation = PLANE_STRAIN
     block = 0
     use_automatic_differentiation = false
     extra_vector_tags = 'ref'
   []
 []
-
 [BCs]
   [hold_b_r_x]
     type = DirichletBC
@@ -133,24 +132,24 @@
   []
 []
 [AuxKernels]
-  [saved_y]
-    type = TagVectorAux
-    vector_tag = 'ref'
-    v = 'disp_y'
-    variable = 'saved_y'
-  []
+  # [saved_y]
+  #   type = TagVectorAux
+  #   vector_tag = 'ref'
+  #   v = 'disp_y'
+  #   variable = 'saved_y'
+  # []
   [damage]
     type = MaterialRealAux
     variable = damage
     property = damage_index
     execute_on = timestep_end
   []
-  # [damage_local]
-  # type = MaterialRealAux
-  # variable = damage_local
-  # property = damage_index_local
-  # execute_on = TIMESTEP_END
-  # []
+  [damage_local]
+    type = MaterialRealAux
+    variable = damage_local
+    property = damage_index_local
+    execute_on = TIMESTEP_END
+  []
   [proc_id]
     type = ProcessorIDAux
     variable = proc_id
@@ -177,17 +176,27 @@
 #     penalty = 10e9
 #   []
 # []
-
 [Materials]
   [damage]
-    type = MazarsDamage
+    type = MazarsDamageAvg
     tensile_strength = 10
     a_t = 0.98
     a_c = 0.98
     b_t = 220
     b_c = 141
-    use_old_damage = true
+    use_old_damage = false
+    average = "ele_avg"
     # strain_base_name = mechanical_strain_reg
+    
+  []
+  [density]
+    type = GenericConstantMaterial
+    block = 0
+    prop_names = density
+    prop_values = 2000 #kg/m3
+  []
+  [new_system]
+    type = ComputeLagrangianWrappedStress
   []
   [stress]
     type = ComputeDamageStress
@@ -207,7 +216,15 @@
     boundary = left_top_2
   []
 []
-
+[UserObjects]
+  [ele_avg]
+    type = RadialAverage
+    material_name = damage_index_local
+    execute_on = "timestep_end"
+    block = 0
+    r_cut = 5.01
+  []
+[]
 [Executioner]
   type = Transient
   solve_type = 'NEWTON'
@@ -216,20 +233,17 @@
   petsc_options_value = 'lu    superlu_dist'
   automatic_scaling = true
   line_search = 'bt'
-
   l_max_its = 50
   l_tol = 1e-14
   nl_max_its = 20
   nl_rel_tol = 1e-5
   nl_abs_tol = 1e-6
-
   dt = 0.05
   dtmin = 1e-8
   end_time = 20.0
 []
-
 [Outputs]
   exodus = true
-  file_base = mazars/results/mazars_local/mazars_local_test
+  file_base = mazars/results/mazars_avg/mazars_avg_test
   csv = true
 []

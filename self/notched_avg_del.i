@@ -9,11 +9,11 @@
 []
 
 [Variables]
- 
+
 []
 
 [Mesh]
- [gen]
+  [gen]
     type = GeneratedMeshGenerator
     dim = 2
     nx = 21
@@ -23,54 +23,60 @@
     # subdomain_ids = 2
     elem_type = quad4
   []
- [subdomain_id]
+  [subdomain_id]
     type = ElementSubdomainIDGenerator
     input = corner_node
     subdomain_ids = '
-    2 2 2 2 2 2 2 2 2 2 1 2 2 2 2 2 2 2 2 2 2 
-    2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2   
-    2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 
-    2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2    
-    2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 
-    2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 
-    2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 
-    2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 
-    2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 
-    2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2  
-    2 2 2 2 2 2 2 2 2 2 1 2 2 2 2 2 2 2 2 2 2 '
+    2 2 2 2 2 2 2 2 2 2 1 2 2 2 2 2 2 2 2 2 2
+    2 2 2 2 2 2 2 2 2 2 2 2 2 2 '
+                    '2 2 2 2 2 2 2
+    2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2
+    2 2 2 2 2 2 2 2 '
+                    '2 2 2 2 2 2 2 2 2 2 2 2 2
+    2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2
+    2 2 '
+                    '2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2
+    2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 '
+                    '2 2
+    2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2
+    2 2 2 2 2 2 2 2 2 2 2 2 2 '
+                    '2 2 2 2 2 2 2 2
+    2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2
+    2 2 2 2 2 2 2 '
+                    '2 2 2 1 2 2 2 2 2 2 2 2 2 2 '
   []
-  [./corner_node]
+  [corner_node]
     type = ExtraNodesetGenerator
     new_boundary = top_right
     nodes = 0
     input = gen
-  [../]
-  [./delete]
-  type = BlockDeletionGenerator
-  input = subdomain_id
-  block = '1'
-  [../]
+  []
+  [delete]
+    type = BlockDeletionGenerator
+    input = subdomain_id
+    block = '1'
+  []
   [add_element]
     type = GeneratedMeshGenerator
     dim = 2
     subdomain_ids = 1
-    elem_type = 'quad4' 
+    elem_type = 'quad4'
   []
-[combine_mesh]
-   type = MeshCollectionGenerator
+  [combine_mesh]
+    type = MeshCollectionGenerator
     inputs = 'delete add_element'
-[]
+  []
 []
 
 [Modules/TensorMechanics/Master]
   [all]
     # generate_output = 'strain_xx strain_yy strain_zz strain_xy strain_yz strain_xz
-                      #  stress_xx stress_yy stress_zz stress_xy stress_yz stress_xz'
+    #  stress_xx stress_yy stress_zz stress_xy stress_yz stress_xz'
     add_variables = true
     incremental = true
     block = 2
     use_automatic_differentiation = true
-    strain=FINITE
+    strain = FINITE
   []
 []
 
@@ -81,11 +87,11 @@
     block = 2
   []
   [damage_average]
-  order = CONSTANT
-  family = MONOMIAL
-  block=2
+    order = CONSTANT
+    family = MONOMIAL
+    block = 2
   []
-    [omega]
+  [omega]
     order = CONSTANT
     family = MONOMIAL
     block = 2
@@ -98,29 +104,29 @@
     variable = damage_index_local
     property = damage_index_local
     execute_on = timestep_end
-    block = 2 
+    block = 2
   []
   [omega]
     type = ADMaterialRealAux
     variable = omega
     property = omega
     execute_on = timestep_end
-    block = 2 
+    block = 2
   []
   [damage_avg]
-  type = ADMaterialRealAux
-  variable = damage_average
-  property = damage_index
-  execute_on = timestep_end
-  block = 2
+    type = ADMaterialRealAux
+    variable = damage_average
+    property = damage_index
+    execute_on = timestep_end
+    block = 2
   []
 []
 
 [BCs]
-   [fx2]
+  [fx2]
     type = ADDirichletBC
     variable = disp_y
-    boundary =top_right
+    boundary = top_right
     value = 0.0
   []
   [fy]
@@ -150,30 +156,28 @@
   []
 []
 
-
-
 [Materials]
-   [dummy_material]
-     type = ADGenericConstantMaterial 
-     prop_names = 'dummy'
-     prop_values = '0.0'
-	   block = 1
-   []
- [converter_to_ad]
+  [dummy_material]
+    type = ADGenericConstantMaterial
+    prop_names = 'dummy'
+    prop_values = '0.0'
+    block = 1
+  []
+  [converter_to_ad]
     type = MaterialADConverter
     ad_props_in = damage_index_local
     reg_props_out = damage_index_local_out
-    block=2
+    block = 2
   []
-[damage]
+  [damage]
     type = ADSteelCreepDamageOhAvg
     epsilon_f = 0.01
     creep_strain_name = creep_strain
     reduction_factor = 1.0e3
     use_old_damage = false
     creep_law_exponent = 10.0
-    reduction_damage_threshold =  0.9
-    average= "ele_avg"
+    reduction_damage_threshold = 0.9
+    average = "ele_avg"
     block = 2
     damage_index_name = damage_index
     maximum_damage_increment = 0.9999
@@ -191,26 +195,26 @@
     n_exponent = 4.0
     m_exponent = 0.0
     activation_energy = 0.0
-    block=2
+    block = 2
   []
   [elasticity]
     type = ADComputeIsotropicElasticityTensor
     poissons_ratio = 0.2
     youngs_modulus = 10e9
-    block=2
+    block = 2
   []
 []
 [UserObjects]
- #[kill_element]
- #  type = CoupledVarThresholdElementSubdomainModifier
- #  coupled_var = 'damage_average'
- #  block = 2
- #  criterion_type = ABOVE
- #  threshold = 0.9
- #  subdomain_id = 1
- #  execute_on = 'TIMESTEP_END'
- #  force_preaux = false
- #[]
+  #[kill_element]
+  #  type = CoupledVarThresholdElementSubdomainModifier
+  #  coupled_var = 'damage_average'
+  #  block = 2
+  #  criterion_type = ABOVE
+  #  threshold = 0.9
+  #  subdomain_id = 1
+  #  execute_on = 'TIMESTEP_END'
+  #  force_preaux = false
+  #[]
   [ele_avg]
     type = RadialAverage
     material_name = damage_index_local_out
@@ -227,7 +231,7 @@
     type = SMP
     full = True
   []
-  
+
 []
 
 # [Postprocessors]
@@ -259,8 +263,8 @@
 [Outputs]
   # exodus = true
   [Exodus]
-  file_base = "self/data/avg"
-  type = Exodus
-  # output_material_properties = true
+    file_base = "self/data/avg"
+    type = Exodus
+    # output_material_properties = true
   []
 []
