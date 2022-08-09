@@ -141,26 +141,16 @@
     order = CONSTANT
     family = MONOMIAL
   []
-  [local_damage]
-    order = CONSTANT
-    family = MONOMIAL
-  []
   [proc_id]
     order = CONSTANT
     family = MONOMIAL
   []
 []
 [AuxKernels]
-  [nonlocal_damage]
+  [damage]
     type = MaterialRealAux
     variable = damage
-    property = nonlocal_damage
-    execute_on = timestep_end
-  []
-  [local_damage]
-    type = MaterialRealAux
-    variable = local_damage
-    property = local_damage
+    property = damage_index
     execute_on = TIMESTEP_END
   []
   [proc_id]
@@ -169,36 +159,8 @@
     execute_on = "INITIAL"
   []
 []
-# [Constraints]
-#   [x_top]
-#     type = EqualValueBoundaryConstraint
-#     variable = disp_x
-#     secondary = left_top_2
-#     penalty = 10e9
-#   []
-#   [y_left]
-#     type = EqualValueBoundaryConstraint
-#     variable = disp_y
-#     secondary = left_top_1
-#     penalty = 10e9
-#   []
-#   [x_left]
-#     type = EqualValueBoundaryConstraint
-#     variable = disp_x
-#     secondary = left_top_1
-#     penalty = 10e9
-#   []
-# []
 
-[UserObjects]
-  [ele_avg]
-    type = RadialAverage
-    material_name = local_damage
-    execute_on = "timestep_end"
-    block = 0
-    r_cut = 2.01
-  []
-[]
+
 [Materials]
   [maz_local]
     type = MazarsDamage
@@ -209,22 +171,16 @@
     b_c = 1500
     residual_stiffness_fraction = 1e-04
     use_displaced_mesh = true
-    damage_index_name = local_damage
+    use_old_damage=true
   []
-  [nonlocal]
-    type = NonLocalDamage
-    average_UO = ele_avg
-    damage_index_name = nonlocal_damage
-    local_damage_model = maz_local
-    use_displaced_mesh = true
-  []
+
   [lang_strain]
     type = ComputeLagrangianStrain
     large_kinematics = true
   []
   [stress]
     type = ComputeDamageStress
-    damage_model = nonlocal
+    damage_model = maz_local
     #block = 2
   []
   [new_system]
@@ -276,11 +232,10 @@
 []
 
 [Outputs]
-  file_base = mazars/results/new_sys/mazars_avg_test
+  file_base = mazars/results/new_sys/mazars_local_test
   csv = true
   [exo]
     type = Exodus
     interval = 10
   []
 []
-
